@@ -123,7 +123,7 @@ def main():
 
             for repeat in range(args.num_repeat):
                 random.seed(repeat)
-                assert args.num_examples < len(all_example_indices), "Number of examples out of range!!!"
+                assert args.num_examples <= len(all_example_indices), "Number of examples out of range!!!"
                 example_indices = random.sample(all_example_indices, args.num_examples)
 
                 examples = [

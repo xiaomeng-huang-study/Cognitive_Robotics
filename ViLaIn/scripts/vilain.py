@@ -219,6 +219,8 @@ class ViLaIn:
                 
         elif gen_type == "initial_state":
             prompt = f"Instruction: given object labels, the bounding boxes of the objects, the captions of the objects, and the objects in PDDL, the goal is to write the initial state of the environment in PDDL. \n"
+            prompt += f"Please focus on: 1. the color differentiation in the labels 2. the coordinates contained in the bounding boxes. (The first 2 represent the coordinates of a vertex, and the last two represent the coordinates of a diagonal vertex. Please use the coordinates to construct and understand the relationship between their positions in a two-dimentional plane.) Note: All information provided by caption(s) can be ignored. \n"
+            prompt += f"Please try to learn, how each predicate in the domain is defined. Only continue if you understand the definition of each predicate. \n"
 
             for i in range(num_examples):
                 obj = examples[i]["objects"]
@@ -252,6 +254,7 @@ class ViLaIn:
                 prompt += f"\tlabel: {label}, bounding box: ({x1}, {y1}, {x2}, {y2}), caption: {cap}\n"
 
             prompt += f"Write the initial state in PDDL? A: \n"
+            prompt += f"(You can only provide one answer. You can only answer in statements that conform to PDDL specifications. You cannot add any textual descriptions.) \n"
 
         elif gen_type == "goal_specification":
             prompt = f"Instruction: given an instruction, the objects in PDDL, and the initial state in PDDL, the goal is to write the goal specification in PDDL. \n"
@@ -282,6 +285,7 @@ class ViLaIn:
                       f"{ini} \n" 
 
             prompt += f"Write the goal specification in PDDL? A: \n"
+            prompt += f"(You can only provide one answer. You can only answer in statements that conform to PDDL specifications. You cannot add any textual descriptions.) \n"
 
         if gen_type in ("initial_state", "goal_specification"):
             # response = openai.ChatCompletion.create(
@@ -301,7 +305,7 @@ class ViLaIn:
             response = ollama.chat(
                 model= model, 
                 messages= [
-                    {"role": "system", "content": "You are a helpful assistant. You can only provide one answer. You can only answer in statements that conform to PDDL specifications. You cannot add any textual descriptions."},
+                    {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": prompt},
                 ],
             )

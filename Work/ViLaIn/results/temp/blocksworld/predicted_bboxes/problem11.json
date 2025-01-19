@@ -1,0 +1,52 @@
+{
+    "purple_block": {
+        "bbox": [
+            160,
+            270,
+            200,
+            310
+        ],
+        "phrase": "purple block",
+        "caption": "it is a block"
+    },
+    "orange_block": {
+        "bbox": [
+            210,
+            270,
+            250,
+            310
+        ],
+        "phrase": "orange block",
+        "caption": "it is a block"
+    },
+    "red_block": {
+        "bbox": [
+            260,
+            270,
+            300,
+            310
+        ],
+        "phrase": "red block",
+        "caption": "it is a block"
+    },
+    "yellow_block": {
+        "bbox": [
+            310,
+            270,
+            350,
+            310
+        ],
+        "phrase": "yellow block",
+        "caption": "it is a block"
+    },
+    "green_block": {
+        "bbox": [
+            360,
+            270,
+            400,
+            310
+        ],
+        "phrase": "green block",
+        "caption": "it is a block"
+    }
+}

@@ -7,7 +7,7 @@
             317.71597883597883
         ],
         "phrase": "red block",
-        "caption": "a block of wood"
+        "caption": "it is a block"
     },
     "green_block": {
         "bbox": [
@@ -17,7 +17,7 @@
             316.8931216931217
         ],
         "phrase": "green block",
-        "caption": "it is a cube"
+        "caption": "it is a block"
     },
     "yellow_block": {
         "bbox": [
@@ -27,7 +27,7 @@
             318.5371428571429
         ],
         "phrase": "yellow block",
-        "caption": "it is a square"
+        "caption": "it is a block"
     },
     "pink_block": {
         "bbox": [
@@ -37,6 +37,6 @@
             318.5371428571429
         ],
         "phrase": "pink block",
-        "caption": "it is a pink block"
+        "caption": "it is a block"
     }
 }

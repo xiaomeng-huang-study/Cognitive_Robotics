@@ -12,6 +12,7 @@ import torch
 from torchvision.ops import box_convert
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
 # import openai
+import google.generativeai as genai
 import ollama
 import groundingdino.util.inference as gdino_inference
 import groundingdino.util.vl_utils as gdino_vl_utils
@@ -19,7 +20,9 @@ import groundingdino.util.vl_utils as gdino_vl_utils
 from utils import get_text_query, create_bbox_annotations
 
 # openai.api_key = os.environ["OPENAI_API_KEY"]
-model = "llama3.2-vision"
+# model = "llama3.2-vision"
+genai.configure(api_key="AIzaSyDZ2KIpbbpL3m-zMYyFY7ED4gubmn8uBP0")
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 class ViLaIn:
     def __init__(
@@ -219,8 +222,10 @@ class ViLaIn:
                 
         elif gen_type == "initial_state":
             prompt = f"Instruction: given object labels, the bounding boxes of the objects, the captions of the objects, and the objects in PDDL, the goal is to write the initial state of the environment in PDDL. \n"
-            prompt += f"Please focus on: 1. the color differentiation in the labels 2. the coordinates contained in the bounding boxes. (The first 2 represent the coordinates of a vertex, and the last two represent the coordinates of a diagonal vertex. Please use the coordinates to construct and understand the relationship between their positions in a two-dimentional plane.) Note: All information provided by caption(s) can be ignored. \n"
-            prompt += f"Please try to learn, how each predicate in the domain is defined. Only continue if you understand the definition of each predicate. \n"
+            prompt += f"With the help of labels, you can differentiate between objects.\n"
+            prompt += f"The first number represents the x-coordinate of the top-left vertex, the larger the value the closer it is to the right side of the screen, and the second number represents the y-coordinate of the top-left vertex, the larger the value the closer it is to the bottom of the screen. The third number represents the x-coordinate of the vertex in the lower right corner, the larger the value the closer to the right side of the screen, and the fourth number represents the y-coordinate of the vertex in the lower right corner, the larger the value the closer to the bottom of the screen. With the help of these two vertices and their coordinates you should be able to understand their position in the picture. \n"
+            prompt += f"You can ignore the captions prompt for now.\n"
+            prompt += f"You should learn how to create the mapping from object labels and bounding boxes to initial state of the environment in PDDL.\n"
 
             for i in range(num_examples):
                 obj = examples[i]["objects"]
@@ -253,11 +258,12 @@ class ViLaIn:
 
                 prompt += f"\tlabel: {label}, bounding box: ({x1}, {y1}, {x2}, {y2}), caption: {cap}\n"
 
-            prompt += f"Write the initial state in PDDL? A: \n"
-            prompt += f"(You can only provide one answer. You can only answer in statements that conform to PDDL specifications. You cannot add any textual descriptions.) \n"
+            prompt += f"Write the initial state in PDDL? "
+            prompt += f"(You can only provide one answer. You can only answer in statements that conform to PDDL specifications. You cannot add any textual descriptions.) "
+            prompt += f"A: \n"
 
         elif gen_type == "goal_specification":
-            prompt = f"Instruction: given an instruction, the objects in PDDL, and the initial state in PDDL, the goal is to write the goal specification in PDDL. \n"
+            prompt = f"Instruction for you: given an instruction for the task, the objects in PDDL, and the initial state in PDDL, you need to write goal specification in PDDL. \n"
             
             for i in range(num_examples):
                 inst = examples[i]["instruction"]
@@ -284,8 +290,9 @@ class ViLaIn:
                       f"The initial state in PDDL is: \n" + \
                       f"{ini} \n" 
 
-            prompt += f"Write the goal specification in PDDL? A: \n"
-            prompt += f"(You can only provide one answer. You can only answer in statements that conform to PDDL specifications. You cannot add any textual descriptions.) \n"
+            prompt += f"Write the goal specification in PDDL? "
+            prompt += f"(You can only provide one answer. You can only answer in statements that conform to PDDL specifications. You cannot add any textual descriptions.) "
+            prompt += f"A: \n"
 
         if gen_type in ("initial_state", "goal_specification"):
             # response = openai.ChatCompletion.create(
@@ -302,14 +309,22 @@ class ViLaIn:
 
             # generated_pddl = response['choices'][0]['message']['content']
             
-            response = ollama.chat(
-                model= model, 
-                messages= [
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": prompt},
-                ],
+            # response = ollama.chat(
+            #     model= model, 
+            #     messages= [
+            #         {"role": "system", "content": "You are a helpful assistant."},
+            #         {"role": "user", "content": prompt},
+            #     ],
+            # )
+            # generated_pddl = response['message']['content']
+            
+            chat = model.start_chat(
+                history=[
+                    {"role": "user", "parts": "You are a helpful assistant."},
+                    {"role": "model", "parts": "I will help you with your tasks"},
+                ]
             )
-            generated_pddl = response['message']['content']
+            generated_pddl = chat.send_message(prompt).text
 
         return generated_pddl
 

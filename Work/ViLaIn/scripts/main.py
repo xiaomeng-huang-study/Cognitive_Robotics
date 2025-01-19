@@ -7,7 +7,7 @@ import random
 from vilain import ViLaIn
 from utils import seed_everything, parse_args, PDDL, get_error_meaning
 
-NUM_TASKS = 10
+NUM_TASKS = 11 # 10 training data + 1 test data
 
 
 def main():
@@ -23,8 +23,8 @@ def main():
     for task_name_idx in range(1, NUM_TASKS + 1):
         task_names.append(f"problem{task_name_idx}")
     
-    task_names_examples = task_names
-    task_names_targets = task_names
+    task_names_examples = task_names[0:10]
+    task_names_targets = task_names[10:NUM_TASKS]
 
     # predict bboxes
     if args.predict_bboxes:
@@ -83,7 +83,7 @@ def main():
         all_examples = []
         all_targets = []
         
-        # Examples
+        # Generate Examples
         for task_name in task_names_examples:
             pddl = PDDL(open(f"{args.data_dir}/problems/{task_name}.pddl").read())
             annotated_bbox_anns = json.load(open(f"{args.result_dir}/annotated_bboxes/{task_name}.json"))
@@ -97,40 +97,24 @@ def main():
                 "bboxes": annotated_bbox_anns,
                 "instruction": instruction,
             }]
-
-        # Targets
+        
+        # --- Option 1:
         for task_name in task_names_targets:
             predicted_bbox_anns = json.load(open(f"{args.result_dir}/predicted_bboxes/{task_name}.json"))
             instruction = open(f"{args.data_dir}/instructions/{task_name}.txt").read()
             
-            all_targets += [{
+            target = {
                 "problem": None,
                 "objects": None,
                 "initial_state": None,
                 "goal_specification": None,
                 "bboxes": predicted_bbox_anns,
                 "instruction": instruction,
-            }]
-
-        
-        for task_name_idx in range(0, NUM_TASKS):
-            # select target
-            target = all_targets[task_name_idx]
-
-            # the example with same index will not be learned
-            all_example_indices = list(range(NUM_TASKS))
-            del all_example_indices[task_name_idx]
-
+            }
+            
+            examples = all_examples
+            
             for repeat in range(args.num_repeat):
-                random.seed(repeat)
-                assert args.num_examples <= len(all_example_indices), "Number of examples out of range!!!"
-                example_indices = random.sample(all_example_indices, args.num_examples)
-
-                examples = [
-                    all_examples[i]
-                    for i in example_indices
-                ]
-
                 # generate PDDL objects
                 objects = vilain.generate_problem(
                     target,
@@ -138,11 +122,11 @@ def main():
                     gen_type="objects",
                     domain_name=domain_name,
                 )
-
+                
                 target["objects"] = objects
-                with open(f"{args.result_dir}/{args.gen_step}/objects/problem{task_name_idx+1}.pddl", "w") as fw:
+                with open(f"{args.result_dir}/{args.gen_step}/objects/{task_name}.pddl", "w") as fw:
                     fw.write(objects)
-                        
+                
                 # generate PDDL initial state
                 initial_state = vilain.generate_problem(
                     target,
@@ -152,9 +136,9 @@ def main():
                 )
 
                 target["initial_state"] = initial_state
-                with open(f"{args.result_dir}/{args.gen_step}/initial_states/problem{task_name_idx+1}.pddl", "w") as fw:
+                with open(f"{args.result_dir}/{args.gen_step}/initial_states/{task_name}.pddl", "w") as fw:
                     fw.write(initial_state)
-
+                
                 # generate PDDL goal_specification
                 goal_specification = vilain.generate_problem(
                     target,
@@ -164,19 +148,101 @@ def main():
                 )
 
                 target["goal_specification"] = goal_specification
-                with open(f"{args.result_dir}/{args.gen_step}/goal_specifications/problem{task_name_idx+1}.pddl", "w") as fw:
+                with open(f"{args.result_dir}/{args.gen_step}/goal_specifications/{task_name}.pddl", "w") as fw:
                     fw.write(goal_specification)
 
                 # concat all parts and generate problem
                 problem = f"(define (problem {domain_name}) \n" + \
-                          f"(:domain {domain_name}) \n" + \
-                          f"{objects} \n" + \
-                          f"{initial_state} \n" + \
-                          f"{goal_specification} \n" + \
-                          f")"
+                            f"(:domain {domain_name}) \n" + \
+                            f"{objects} \n" + \
+                            f"{initial_state} \n" + \
+                            f"{goal_specification} \n" + \
+                            f")"
 
-                with open(f"{args.result_dir}/{args.gen_step}/problems/problem{task_name_idx+1}.pddl", "w") as fw:
+                with open(f"{args.result_dir}/{args.gen_step}/problems/{task_name}.pddl", "w") as fw:
                     fw.write(problem)
+
+
+        # --- Option 2:
+        # # Generate Targets
+        # for task_name in task_names_targets:
+        #     predicted_bbox_anns = json.load(open(f"{args.result_dir}/predicted_bboxes/{task_name}.json"))
+        #     instruction = open(f"{args.data_dir}/instructions/{task_name}.txt").read()
+            
+        #     all_targets += [{
+        #         "problem": None,
+        #         "objects": None,
+        #         "initial_state": None,
+        #         "goal_specification": None,
+        #         "bboxes": predicted_bbox_anns,
+        #         "instruction": instruction,
+        #     }]
+
+        # # Apply
+        # for task_name_idx in range(0, NUM_TASKS):
+        #     # select target
+        #     target = all_targets[task_name_idx]
+
+        #     # the example with same index will not be learned
+        #     all_example_indices = list(range(NUM_TASKS))
+        #     del all_example_indices[task_name_idx]
+
+        #     for repeat in range(args.num_repeat):
+        #         random.seed(repeat)
+        #         assert args.num_examples <= len(all_example_indices), "Number of examples out of range!!!"
+        #         example_indices = random.sample(all_example_indices, args.num_examples)
+
+        #         examples = [
+        #             all_examples[i]
+        #             for i in example_indices
+        #         ]
+
+        #         # generate PDDL objects
+        #         objects = vilain.generate_problem(
+        #             target,
+        #             examples,
+        #             gen_type="objects",
+        #             domain_name=domain_name,
+        #         )
+
+        #         target["objects"] = objects
+        #         with open(f"{args.result_dir}/{args.gen_step}/objects/problem{task_name_idx+1}.pddl", "w") as fw:
+        #             fw.write(objects)
+                        
+        #         # generate PDDL initial state
+        #         initial_state = vilain.generate_problem(
+        #             target,
+        #             examples,
+        #             gen_type="initial_state",
+        #             domain_name=domain_name,
+        #         )
+
+        #         target["initial_state"] = initial_state
+        #         with open(f"{args.result_dir}/{args.gen_step}/initial_states/problem{task_name_idx+1}.pddl", "w") as fw:
+        #             fw.write(initial_state)
+
+        #         # generate PDDL goal_specification
+        #         goal_specification = vilain.generate_problem(
+        #             target,
+        #             examples,
+        #             gen_type="goal_specification",
+        #             domain_name=domain_name,
+        #         )
+
+        #         target["goal_specification"] = goal_specification
+        #         with open(f"{args.result_dir}/{args.gen_step}/goal_specifications/problem{task_name_idx+1}.pddl", "w") as fw:
+        #             fw.write(goal_specification)
+
+        #         # concat all parts and generate problem
+        #         problem = f"(define (problem {domain_name}) \n" + \
+        #                   f"(:domain {domain_name}) \n" + \
+        #                   f"{objects} \n" + \
+        #                   f"{initial_state} \n" + \
+        #                   f"{goal_specification} \n" + \
+        #                   f")"
+
+        #         with open(f"{args.result_dir}/{args.gen_step}/problems/problem{task_name_idx+1}.pddl", "w") as fw:
+        #             fw.write(problem)
 
                 # gen_idx += 1
 

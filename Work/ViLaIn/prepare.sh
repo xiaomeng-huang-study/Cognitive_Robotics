@@ -1,7 +1,8 @@
 sudo apt update
 sudo apt install cmake g++ make python3 python3-dev libglu1-mesa-dev pciutils git -y
 
-export ViLaIn_dir="/root/Cognitive_Robotics/ViLaIn/"
+export ViLaIn_dir="/root/Cognitive_Robotics/Work/ViLaIn"
+chmod -R 777 ${ViLaIn_dir}
 # for Downward
 cd ${ViLaIn_dir}/downward
 ./build.py
@@ -25,11 +26,14 @@ cd weights
 wget -q https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha2/groundingdino_swinb_cogcoor.pth
 cd ${ViLaIn_dir}
 
-# Ollama
-cd /tmp
-curl -fsSL https://ollama.com/install.sh | sh
-pip install ollama
-ollama serve
-ollama run llama3.2-vision
-systemctl stop ollama.service
-cd ${ViLaIn_dir}
+# Gemini 
+pip install -q -U google-generativeai
+pip install grpcio==1.60.1
+
+# # Ollama
+# cd /tmp
+# curl -fsSL https://ollama.com/install.sh | sh
+# pip install ollama
+# # ollama serve
+# # ollama run llama3.2-vision
+# cd ${ViLaIn_dir}

@@ -11,7 +11,6 @@ from PIL import Image
 import torch
 from torchvision.ops import box_convert
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
-# import openai
 import google.generativeai as genai
 import ollama
 import groundingdino.util.inference as gdino_inference
@@ -19,10 +18,10 @@ import groundingdino.util.vl_utils as gdino_vl_utils
 
 from utils import get_text_query, create_bbox_annotations
 
-# openai.api_key = os.environ["OPENAI_API_KEY"]
-# model = "llama3.2-vision"
+model_deepseek = "llama3.3"
+
+model_gemini = genai.GenerativeModel("gemini-2.0-flash")
 genai.configure(api_key="AIzaSyDZ2KIpbbpL3m-zMYyFY7ED4gubmn8uBP0")
-model = genai.GenerativeModel("gemini-1.5-flash")
 
 class ViLaIn:
     def __init__(
@@ -32,11 +31,11 @@ class ViLaIn:
         self.args = args
 
         # load grounding-dino for object detection and blip2 for captioning
-        if args.predict_bboxes:
+        if self.args.predict_bboxes:
             # object detection
             self.grounding_dino = gdino_inference.load_model(
-                f"{args.grounding_dino_dir}/groundingdino/config/GroundingDINO_SwinB_cfg.py", 
-                f"{args.grounding_dino_dir}/weights/groundingdino_swinb_cogcoor.pth",
+                f"{self.args.grounding_dino_dir}/groundingdino/config/GroundingDINO_SwinB_cfg.py", 
+                f"{self.args.grounding_dino_dir}/weights/groundingdino_swinb_cogcoor.pth",
             ).to("cuda")
 
             # captioning
@@ -259,7 +258,7 @@ class ViLaIn:
                 prompt += f"\tlabel: {label}, bounding box: ({x1}, {y1}, {x2}, {y2}), caption: {cap}\n"
 
             prompt += f"Write the initial state in PDDL? "
-            prompt += f"(You can only provide one answer. You can only answer in statements that conform to PDDL specifications. You cannot add any textual descriptions.) "
+            prompt += f"(You only need to show a result, thinking processes or textual descriptions such as annotations need to be omitted. You can only answer in statements that conform to PDDL specifications.) "
             prompt += f"A: \n"
 
         elif gen_type == "goal_specification":
@@ -291,41 +290,37 @@ class ViLaIn:
                       f"{ini} \n" 
 
             prompt += f"Write the goal specification in PDDL? "
-            prompt += f"(You can only provide one answer. You can only answer in statements that conform to PDDL specifications. You cannot add any textual descriptions.) "
+            prompt += f"(You only need to show a result, thinking processes or textual descriptions such as annotations need to be omitted. You can only answer in statements that conform to PDDL specifications.) "
             prompt += f"A: \n"
 
         if gen_type in ("initial_state", "goal_specification"):
-            # response = openai.ChatCompletion.create(
-            #     model="gpt-4",
-            #     temperature=0.0,
-            #     top_p=1,
-            #     frequency_penalty=0,
-            #     presence_penalty=0,
-            #     messages=[
-            #         {"role": "system", "content": "You are a helpful assistant."},
-            #         {"role": "user", "content": prompt},
-            #     ],
-            # )
-
-            # generated_pddl = response['choices'][0]['message']['content']
+            assert self.args.llm_model in ["Deepseek", "Gemini"], "You must choose 1 from Deepseek or Gemini!!!"
+            if self.args.llm_model == "Deepseek":
+                model = model_deepseek
             
-            # response = ollama.chat(
-            #     model= model, 
-            #     messages= [
-            #         {"role": "system", "content": "You are a helpful assistant."},
-            #         {"role": "user", "content": prompt},
-            #     ],
-            # )
-            # generated_pddl = response['message']['content']
+                response = ollama.chat(
+                    model= model, 
+                    messages= [
+                        {"role": "system", "content": "You are a helpful assistant."},
+                        {"role": "user", "content": prompt},
+                    ],
+                    options= {"num_ctx": 8192}
+                )
+                
+                generated_pddl = response['message']['content']
             
-            chat = model.start_chat(
-                history=[
-                    {"role": "user", "parts": "You are a helpful assistant."},
-                    {"role": "model", "parts": "I will help you with your tasks"},
-                ]
-            )
-            generated_pddl = chat.send_message(prompt).text
-
+            elif self.args.llm_model == "Gemini":
+                model = self.args.llm_model
+                
+                chat = model.start_chat(
+                    history=[
+                        {"role": "user", "parts": "You are a helpful assistant."},
+                        {"role": "model", "parts": "I will help you with your tasks"},
+                    ]
+                )
+                
+                generated_pddl = chat.send_message(prompt).text
+        
         return generated_pddl
 
     # corrective reprompting
@@ -388,19 +383,7 @@ class ViLaIn:
             server_cnt = 0
 
             while server_cnt < 10:
-                try:
-                    # response = openai.ChatCompletion.create(
-                    #     model="gpt-4",
-                    #     temperature=0.0,
-                    #     top_p=1,
-                    #     frequency_penalty=0,
-                    #     presence_penalty=0,
-                    #     messages=[
-                    #         {"role": "system", "content": "You are a helpful assistant."},
-                    #         {"role": "user", "content": prompt},
-                    #     ],
-                    # )
-                    
+                try: 
                     response = ollama.chat(
                         model= model, 
                         messages= [
@@ -433,18 +416,6 @@ class ViLaIn:
 
         while server_cnt < 10:
             try:
-                # response = openai.ChatCompletion.create(
-                #     model="gpt-4",
-                #     temperature=0.0,
-                #     top_p=1,
-                #     frequency_penalty=0,
-                #     presence_penalty=0,
-                #     messages=[
-                #         {"role": "system", "content": "You are a helpful assistant."},
-                #         {"role": "user", "content": prompt},
-                #     ],
-                # )
-                
                 response = ollama.chat(
                     model= model, 
                     messages= [

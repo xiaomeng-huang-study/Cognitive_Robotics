@@ -1,18 +1,3 @@
-# Predict bounding boxes
-```bash
-export domain=blocksworld
-export grounding_dino_dir=./GroundingDINO
-export result_dir=./results/temp/${domain}
-export data_dir=./data/temp/${domain}
-
-python3 scripts/main.py \
-    --domain_name ${domain} \
-    --data_dir ${data_dir} \
-    --result_dir ${result_dir} \
-    --grounding_dino_dir ${grounding_dino_dir} \
-    --predict_bboxes
-```
-
 # Generate Problem
 ```bash
 export domain=blocksworld
@@ -20,7 +5,8 @@ export downward_dir=./downward
 export data_dir=./data/temp/${domain}
 export result_dir=./results/temp/${domain}
 export num_repeat=1
-export num_examples=5   # max 9
+export num_examples=10   # max 9
+export llm_model="Deepseek"
 
 python3 scripts/main.py \
     --domain_name ${domain} \
@@ -30,6 +16,7 @@ python3 scripts/main.py \
     --num_repeat ${num_repeat} \
     --num_examples ${num_examples} \
     --gen_step "plain" \
+    --llm_model ${llm_model} \
     --generate_problem
 ```
 
@@ -47,20 +34,4 @@ python3 scripts/main.py \
     --gen_step "refine_once" \
     --refine_all \
     --refine_problem
-```
-
-# Find Plan
-```bash
-export domain=blocksworld
-export downward_dir=./downward
-export data_dir=./data/temp/${domain}
-export result_dir=./results/temp/${domain}
-
-python3 scripts/main.py \
-    --domain_name ${domain} \
-    --downward_dir ${downward_dir} \
-    --data_dir ${data_dir} \
-    --result_dir "${result_dir}" \
-    --gen_step "refine_once" \
-    --find_plan
 ```

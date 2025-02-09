@@ -30,10 +30,9 @@ cd ${ViLaIn_dir}
 pip install -q -U google-generativeai
 pip install grpcio==1.60.1
 
-# # Ollama
-# cd /tmp
-# curl -fsSL https://ollama.com/install.sh | sh
-# pip install ollama
-# # ollama serve
-# # ollama run llama3.2-vision
-# cd ${ViLaIn_dir}
+# Ollama
+cd /tmp
+curl -fsSL https://ollama.com/install.sh | sh
+pip install ollama
+ollama serve &
+cd ${ViLaIn_dir}

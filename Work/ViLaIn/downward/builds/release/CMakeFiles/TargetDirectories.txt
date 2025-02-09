@@ -1,0 +1,6 @@
+/root/Cognitive_Robotics/Work/ViLaIn/downward/builds/release/CMakeFiles/translate.dir
+/root/Cognitive_Robotics/Work/ViLaIn/downward/builds/release/CMakeFiles/edit_cache.dir
+/root/Cognitive_Robotics/Work/ViLaIn/downward/builds/release/CMakeFiles/rebuild_cache.dir
+/root/Cognitive_Robotics/Work/ViLaIn/downward/builds/release/search/CMakeFiles/downward.dir
+/root/Cognitive_Robotics/Work/ViLaIn/downward/builds/release/search/CMakeFiles/edit_cache.dir
+/root/Cognitive_Robotics/Work/ViLaIn/downward/builds/release/search/CMakeFiles/rebuild_cache.dir

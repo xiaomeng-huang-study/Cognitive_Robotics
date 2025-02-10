@@ -8,7 +8,7 @@ import time
 from vilain import ViLaIn
 from utils import seed_everything, parse_args, PDDL, get_error_meaning
 
-NUM_TASKS = 11 # 10 training data + 1 test data
+NUM_TASKS = 20 # 10 training data + 1 test data
 
 
 def main():

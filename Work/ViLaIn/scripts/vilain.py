@@ -18,7 +18,7 @@ import groundingdino.util.vl_utils as gdino_vl_utils
 
 from utils import get_text_query, create_bbox_annotations
 
-model_deepseek = "llama3.3"
+model_ollama = "llama3.2"
 
 model_gemini = genai.GenerativeModel("gemini-2.0-flash")
 genai.configure(api_key="AIzaSyDZ2KIpbbpL3m-zMYyFY7ED4gubmn8uBP0")
@@ -294,9 +294,9 @@ class ViLaIn:
             prompt += f"A: \n"
 
         if gen_type in ("initial_state", "goal_specification"):
-            assert self.args.llm_model in ["Deepseek", "Gemini"], "You must choose 1 from Deepseek or Gemini!!!"
-            if self.args.llm_model == "Deepseek":
-                model = model_deepseek
+            assert self.args.llm_model in ["Ollama", "Gemini"], "You must choose 1 from Ollama or Gemini!!!"
+            if self.args.llm_model == "Ollama":
+                model = model_ollama
             
                 response = ollama.chat(
                     model= model, 

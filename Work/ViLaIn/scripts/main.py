@@ -3,6 +3,7 @@
 import os
 import json
 import random
+import time
 
 from vilain import ViLaIn
 from utils import seed_everything, parse_args, PDDL, get_error_meaning
@@ -74,6 +75,8 @@ def main():
 
     # generate PDDL problems
     elif args.generate_problem:
+        start_time = time.time()
+        
         for dname in ("objects", "initial_states", "goal_specifications", "problems"):
             os.makedirs(
                 f"{args.result_dir}/{args.gen_step}/{dname}",
@@ -245,6 +248,9 @@ def main():
         #             fw.write(problem)
 
                 # gen_idx += 1
+                
+        end_time = time.time()
+        print("It took", (end_time - start_time)*1000.0, "milliseconds for generating problems.")
 
     # refine generated problems using corrective reprompting
     elif args.refine_problem:

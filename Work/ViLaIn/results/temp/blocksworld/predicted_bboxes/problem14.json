@@ -31,20 +31,20 @@
     },
     "yellow_block": {
         "bbox": [
-            325,
-            270,
-            355,
-            310
+            70,
+            230,
+            100,
+            270
         ],
         "phrase": "yellow block",
         "caption": "it is a block"
     },
     "green_block": {
         "bbox": [
-            410,
-            270,
-            440,
-            310
+            155,
+            230,
+            185,
+            270
         ],
         "phrase": "green block",
         "caption": "it is a block"

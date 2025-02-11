@@ -28,11 +28,11 @@ cd ${ViLaIn_dir}
 
 # Gemini 
 pip install -q -U google-generativeai
-pip install grpcio==1.60.1
+# pip install grpcio==1.60.1
 
 # Ollama
 cd /tmp
 curl -fsSL https://ollama.com/install.sh | sh
 pip install ollama
-ollama serve &
+ollama serve
 cd ${ViLaIn_dir}

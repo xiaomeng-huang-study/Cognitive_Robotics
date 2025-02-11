@@ -18,7 +18,7 @@ import groundingdino.util.vl_utils as gdino_vl_utils
 
 from utils import get_text_query, create_bbox_annotations
 
-model_ollama = "llama3.2"
+model_ollama = "gemma2:27b"
 
 model_gemini = genai.GenerativeModel("gemini-2.0-flash")
 genai.configure(api_key="AIzaSyDZ2KIpbbpL3m-zMYyFY7ED4gubmn8uBP0")

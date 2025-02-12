@@ -18,9 +18,6 @@ import groundingdino.util.vl_utils as gdino_vl_utils
 
 from utils import get_text_query, create_bbox_annotations
 
-model_ollama = "gemma2:27b"
-
-model_gemini = genai.GenerativeModel("gemini-2.0-flash")
 genai.configure(api_key="AIzaSyDZ2KIpbbpL3m-zMYyFY7ED4gubmn8uBP0")
 
 class ViLaIn:
@@ -294,9 +291,8 @@ class ViLaIn:
             prompt += f"A: \n"
 
         if gen_type in ("initial_state", "goal_specification"):
-            assert self.args.llm_model in ["Ollama", "Gemini"], "You must choose 1 from Ollama or Gemini!!!"
-            if self.args.llm_model == "Ollama":
-                model = model_ollama
+            if self.args.llm_model in ["llama3.2", "llama3.1", "llama3.2-vision"]:
+                model = self.args.llm_model
             
                 response = ollama.chat(
                     model= model, 
@@ -309,8 +305,8 @@ class ViLaIn:
                 
                 generated_pddl = response['message']['content']
             
-            elif self.args.llm_model == "Gemini":
-                model = self.args.llm_model
+            elif self.args.llm_model in ["gemini-1.5-flash"]:
+                model = genai.GenerativeModel(self.args.llm_model)
                 
                 chat = model.start_chat(
                     history=[

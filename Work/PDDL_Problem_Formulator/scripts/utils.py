@@ -27,17 +27,23 @@ def seed_everything(seed: int=42):
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    # for main.py and evaluate.py
-    parser.add_argument("--data_dir", type=str, default=None, help="directory for data")
-    parser.add_argument("--result_dir", type=str, default=None, help="direcotry for predicted bboxes, generated problems, and found plans")
-    parser.add_argument("--domain_name", type=str, default=None, help="domain name (cooking/blocksworld/hanoi)")
-
-    # for main.py 
-    parser.add_argument("--predict_bboxes", action="store_true", help="detect objects with bboxes and generate captions")
+    parser.add_argument("--domain_name", type=str, default=None, help="domain name e.g. blocksworld")
+    
+    parser.add_argument("--examples_dir", type=str, default=None, help="directory for examples")
+    parser.add_argument("--targets_dir", type=str, default=None, help="directory for targets")
+    
+    parser.add_argument("--seed", type=int, default=42, help="random seed")
+    
+    parser.add_argument("--llm_model", type=str, default=None, help="choose the llm model. e.g. llama3.2, llama3.1, llama3.2-vision, gemini-2.0-flash")
     parser.add_argument("--generate_problem", action="store_true", help="generate PDDL problems")
-    parser.add_argument("--refine_problem", action="store_true", help="refine generated problems by corrective reprompting")
-    parser.add_argument("--find_plan", action="store_true", help="refine generated problems by corrective reprompting")
-
+    parser.add_argument("--gen_step", type=str, default="plain", help="PDDL generation step")
+    parser.add_argument("--num_repeat", type=int, default=1, help="the number of problems to generate per task")
+    
+    
+    parser.add_argument("--predict_bboxes", action="store_false", help="detect objects with bboxes and generate captions")
+    parser.add_argument("--refine_problem", action="store_false", help="refine generated problems by corrective reprompting")
+    parser.add_argument("--find_plan", action="store_false", help="refine generated problems by corrective reprompting")
+    
     # grounding dino
     parser.add_argument("--grounding_dino_dir", type=str, default=None, help="directory for grounding dino")
     parser.add_argument("--box_threshold", type=float, default=0.35, help="")
@@ -46,16 +52,10 @@ def parse_args():
     # downward
     parser.add_argument("--downward_dir", type=str, default=None, help="")
     parser.add_argument("--time_limit", type=int, default=200, help="")
-
-    # related to problem generation and refinement
-    parser.add_argument("--seed", type=int, default=42, help="random seed")
-    parser.add_argument("--gen_step", type=str, default="base", help="PDDL generation step")
-    parser.add_argument("--prev_gen_step", type=str, default="base", help="Previous generation step, used for corrective reprompting")
-    parser.add_argument("--num_examples", type=int, default=1, help="the numebr of examples for few-shot prompting")
-    parser.add_argument("--num_repeat", type=int, default=1, help="the number of problems to generate per task")
-    parser.add_argument("--use_cot", action="store_true", help="refine problem with chain-of-thought (cot)")
-    parser.add_argument("--refine_all", action="store_true", help="refine all problems regardless of errors")
-    parser.add_argument("--llm_model", type=str, default=None, help="choose the llm model. e.g. llama3.2, llama3.1, llama3.2-vision, gemini-2.0-flash")
+    
+    parser.add_argument("--use_cot", action="store_false", help="refine problem with chain-of-thought (cot)")
+    parser.add_argument("--refine_all", action="store_false", help="refine all problems regardless of errors")
+    
     args = parser.parse_args()
 
     return args
@@ -228,231 +228,6 @@ def create_bbox_annotations(
     return bbox_anns
 
 
-def get_downward_exit_codes():
-    return {
-        0: [
-            "SUCCESS",
-            "All run components successfully terminated (translator: completed, search: found a plan, validate: validated a plan)",
-        ],
-        1: [
-            "SEARCH_PLAN_FOUND_AND_OUT_OF_MEMORY",
-            "Only returned by portfolios: at least one plan was found and another component ran out of memory.",
-        ],
-        2: [
-            "SEARCH_PLAN_FOUND_AND_OUT_OF_TIME",
-            "Only returned by portfolios: at least one plan was found and another component ran out of time.",
-        ],
-        3: [
-            "SEARCH_PLAN_FOUND_AND_OUT_OF_MEMORY_AND_TIME",
-            "Only returned by portfolios: at least one plan was found, another component ran out of memory, and yet another one ran out of time.",
-        ],
-        10: [
-            "TRANSLATE_UNSOLVABLE",
-            "Translator proved task to be unsolvable. Currently not used",
-        ],
-        11: [
-            "SEARCH_UNSOLVABLE",
-            "Task is provably unsolvable with current bound. Currently only used by hillclimbing search.",
-        ],
-        12: [
-            "SEARCH_UNSOLVED_INCOMPLETE",
-            "Search ended without finding a solution.",
-        ],
-        20: [
-            "TRANSLATE_OUT_OF_MEMORY",
-            "Memory exhausted.",
-        ],
-        21: [
-            "TRANSLATE_OUT_OF_TIME",
-            "Time exhausted. Not supported on Windows because we use SIGXCPU to kill the planner.",
-        ],
-        22: [
-            "SEARCH_OUT_OF_MEMORY",
-            "Memory exhausted.",
-        ],
-        23: [
-            "SEARCH_OUT_OF_TIME",
-            "Timeout occurred. Not supported on Windows because we use SIGXCPU to kill the planner.",
-        ],
-        24: [
-            "SEARCH_OUT_OF_MEMORY_AND_TIME",
-            "Only returned by portfolios: one component ran out of memory and another one out of time.",
-        ],
-        30: [
-            "TRANSLATE_CRITICAL_ERROR",
-            "Critical error: something went wrong (e.g. translator bug, but also malformed PDDL input).",
-        ],
-        31: [
-            "TRANSLATE_INPUT_ERROR",
-            "Usage error: wrong command line options",
-        ],
-        32: [
-            "SEARCH_CRITICAL_ERROR",
-            "Something went wrong that should not have gone wrong (e.g. planner bug).",
-        ],
-        33: [
-            "SEARCH_INPUT_ERROR",
-            "Wrong command line options or SAS+ file.",
-        ],
-        34: [
-            "SEARCH_UNSUPPORTED",
-            "Requested unsupported feature.",
-        ],
-        35: [
-            "DRIVER_CRITICAL_ERROR",
-            "Something went wrong in the driver (e.g. failed setting resource limits, ill-defined portfolio, complete plan generated after an incomplete one).",
-        ],
-        36: [
-            "DRIVER_INPUT_ERROR",
-            "Usage error: wrong or missing command line options, including (implicitly) specifying non-existing paths (e.g. for input files or build directory).",
-        ],
-        37: [
-            "DRIVER_UNSUPPORTED",
-            "Requested unsupported feature (e.g. limiting memory on macOS).",
-        ],
-    }
-
-
-def get_error_meaning(error_path: str):
-    found_name = None
-    found_code = None
-
-    for line in open(error_path).readlines():
-        if "exit code" in line:
-            name, code = line.split(":")
-            name = name.strip()
-            code = int(code.strip())
-
-            if code != 0:
-                found_name = name
-                found_code = code
-                break
-
-    if found_name is None:
-        raise Exception()
-
-    exit_codes = get_downward_exit_codes()
-    error_name, error_meaning = exit_codes[found_code]
-
-    return error_name, error_meaning
-
-
-def comp_pddl(
-    gt_pddl: str, # ground truth PDDL problem
-    gen_pddl: str, # generated PDDL problem
-):
-    gt_pddl = re.sub(r"\s+", " ", gt_pddl.replace("\n", " "))
-    gen_pddl = re.sub(r"\s+", " ", gen_pddl.replace("\n", " "))
-
-    # objects
-    try:
-        gt_obj_pddl = re.findall(r"\(:objects.*\(:init", gt_pddl)[0].replace("(:init", "")
-        gt_objs = parse_objects(gt_obj_pddl)
-
-        gen_obj_pddl = re.findall(r"\(:objects.*\(:init", gen_pddl)[0].replace("(:init", "")
-        gen_objs = parse_objects(gen_obj_pddl)
-
-        comp_obj = True
-        for gt_o in gt_objs:
-            if not gt_o in gen_objs:
-                comp_obj = False
-
-    except Exception as e:
-        comp_obj = False
-
-    # initial state
-    try:
-        gt_ini_pddl = re.findall(r"\(:init.*\(:goal", gt_pddl)[0].replace("(:goal", "")
-        gt_ini = parse_initial_state(gt_ini_pddl)
-
-        gen_ini_pddl = re.findall(r"\(:init.*\(:goal", gen_pddl)[0].replace("(:goal", "")
-        gen_ini = parse_initial_state(gen_ini_pddl)
-
-        comp_ini = True
-        for gt_i in gt_ini:
-            if not gt_i in gen_ini:
-                comp_ini = False
-
-    except Exception as e:
-        comp_ini = False
-
-    # goal specification
-    try:
-        gt_gol_pddl = re.findall(r"\(:goal.*", gt_pddl)[0]
-        gt_gol = parse_goal_specification(gt_gol_pddl)
-
-        gen_gol_pddl = re.findall(r"\(:goal.*", gen_pddl)[0]
-        gen_gol = parse_goal_specification(gen_gol_pddl)
-
-        comp_gol = True
-        for gt_g in gt_gol:
-            if not gt_g in gen_gol:
-                comp_gol = False
-
-    except Exception as e:
-        comp_gol = False
-
-    return comp_obj and comp_ini and comp_gol
-
-
-def comp_exact_pddl(
-    gt_pddl: str, # ground truth PDDL problem
-    gen_pddl: str, # generated PDDL problem
-):
-    gt_pddl = re.sub(r"\s+", " ", gt_pddl.replace("\n", " "))
-    gen_pddl = re.sub(r"\s+", " ", gen_pddl.replace("\n", " "))
-
-    # objects
-    try:
-        gt_obj_pddl = re.findall(r"\(:objects.*\(:init", gt_pddl)[0].replace("(:init", "")
-        gt_objs = parse_objects(gt_obj_pddl)
-
-        gen_obj_pddl = re.findall(r"\(:objects.*\(:init", gen_pddl)[0].replace("(:init", "")
-        gen_objs = parse_objects(gen_obj_pddl)
-
-        if set(gt_objs) == set(gen_objs):
-            comp_obj = True
-        else:
-            comp_obj = False
-
-    except Exception as e:
-        comp_obj = False
-
-    # initial state
-    try:
-        gt_ini_pddl = re.findall(r"\(:init.*\(:goal", gt_pddl)[0].replace("(:goal", "")
-        gt_ini = parse_initial_state(gt_ini_pddl)
-
-        gen_ini_pddl = re.findall(r"\(:init.*\(:goal", gen_pddl)[0].replace("(:goal", "")
-        gen_ini = parse_initial_state(gen_ini_pddl)
-
-        if set(gt_ini) == set(gen_ini):
-            comp_ini = True
-        else:
-            comp_ini = False
-
-    except Exception as e:
-        comp_ini = False
-
-    # goal specification
-    try:
-        gt_gol_pddl = re.findall(r"\(:goal.*", gt_pddl)[0]
-        gt_gol = parse_goal_specification(gt_gol_pddl)
-
-        gen_gol_pddl = re.findall(r"\(:goal.*", gen_pddl)[0]
-        gen_gol = parse_goal_specification(gen_gol_pddl)
-
-        if set(gt_gol) == set(gen_gol):
-            comp_gol = True
-        else:
-            comp_gol = False
-
-    except Exception as e:
-        comp_gol = False
-
-    return comp_obj and comp_ini and comp_gol
-
-
 class PDDL:
     def __init__(
         self, 
@@ -608,99 +383,3 @@ class PDDL:
             #self.goal_conditions = None
             self.pddl_goal_specification = []
             self.goal_conditions = []
-
-
-def validate_problem(
-    downward_dir: str,
-    domain_path: str,
-    problem_path: str,
-):
-    try:
-        output = subprocess.check_output(
-            f"{downward_dir}/validate {domain_path} {problem_path}",
-            stderr=subprocess.DEVNULL,
-            shell=True,
-        ).decode()
-    except Exception as e:
-        output = str(e.output)
-
-    return output
-
-
-def validate_plan(
-    downward_dir: str,
-    domain_path: str,
-    problem_path: str,
-    plan_paths: List[str],
-):
-    plan_valid = False
-
-    for plan_path in plan_paths:
-        try:
-            output = subprocess.check_output(
-                f"{downward_dir}/validate {domain_path} {problem_path} {plan_path}",
-                #stderr=subprocess.DEVNULL,
-                shell=True,
-            ).decode()
-
-            if "Plan valid" in output:
-                plan_valid = True
-
-        except Exception as e:
-            pass
-
-    return plan_valid
-
-
-def calculate_rpart(
-    gt_strs_list: List[List[str]],
-    gen_strs_list: List[List[str]],
-):
-    num_matched = 0
-    for gt_strs, gen_strs in zip(gt_strs_list, gen_strs_list):
-        for x in gt_strs:
-            if x in gen_strs:
-                num_matched += 1
-
-    num_gt_total = sum([
-        len(gt_strs)
-        for gt_strs in gt_strs_list
-    ])
-
-    recall = num_matched / num_gt_total 
-
-    return recall
-
-
-def calculate_rall(
-    gt_pddl_list: List[PDDL],
-    gen_pddl_list: List[PDDL],
-):
-    num_matched = 0
-    for gt_pddl, gen_pddl in zip(gt_pddl_list, gen_pddl_list):
-        # check all objects
-        match_obj = True
-        for gt_o in gt_pddl.objects:
-            if not gt_o in gen_pddl.objects:
-                match_obj = False
-
-        # check all initial conditions
-        match_ini = True
-        for gt_i in gt_pddl.initial_conditions:
-            if not gt_i in gen_pddl.initial_conditions:
-                match_ini = False
-
-        # check all goal conditions
-        match_gol = True
-        for gt_g in gt_pddl.goal_conditions:
-            if not gt_g in gen_pddl.goal_conditions:
-                match_gol = False
-        
-        if match_obj and match_ini and match_gol:
-            num_matched += 1
-
-    num_total = len(gt_pddl_list)
-
-    return num_matched / num_total
-        
-

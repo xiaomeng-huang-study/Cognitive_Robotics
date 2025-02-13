@@ -1,1 +1,0 @@
-/usr/bin/c++  -Wall -fpermissive -O3 -DNDEBUG -rdynamic CMakeFiles/PinguPlan.dir/applications/PinguPlan/src/main.cpp.o -o bin/PinguPlan  -Wl,-rpath,"\$ORIGIN" bin/libVAL.so 

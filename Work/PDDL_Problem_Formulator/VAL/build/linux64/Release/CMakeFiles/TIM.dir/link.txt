@@ -1,1 +1,0 @@
-/usr/bin/c++  -Wall -fpermissive -O3 -DNDEBUG -rdynamic CMakeFiles/TIM.dir/applications/TIM/src/main.cpp.o -o bin/TIM  -Wl,-rpath,"\$ORIGIN" bin/libVAL.so 

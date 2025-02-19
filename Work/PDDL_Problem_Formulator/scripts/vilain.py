@@ -1,16 +1,6 @@
-#!/usr/bin/env python
-
 from typing import List
 from collections import defaultdict
 import os
-import time
-import json
-
-from google import genai
-from google.genai import types
-import ollama
-from ollama import Client
-from openai import OpenAI
 
 import requests
 
@@ -167,7 +157,7 @@ class ViLaIn:
 
         if gen_type in ("initial_state", "goal_specification"):
             if self.args.llm_model in ["llama3.2", "llama3.1", "llama3.2-vision"]:
-                API_URL = os.environ["API_URL_Ollama"]
+                API_URL = "http://91.244.166.123:11434/api/generate" # os.environ["API_URL_Ollama"]
                 
                 headers = {'Content-Type': 'application/json'}
                 
@@ -181,7 +171,7 @@ class ViLaIn:
                 }
                 
                 try:
-                    response = requests.post(API_URL, json=json.dumps(payload), headers=headers).json()
+                    response = requests.post(API_URL, json=payload, headers=headers).json()
                 except requests.exceptions.RequestException as e:
                     print(f"Error during request: {e}")
                 except Exception as e:

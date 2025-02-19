@@ -1,7 +1,7 @@
 export domain=blocksworld
 export examples_dir=./examples/${domain}
 export targets_dir=./targets/${domain}
-export llm_model="llama3.2" # llama3.2, llama3.1, llama3.2-vision, gemini-1.5-flash, claude-3-5-sonnet-20241022
+export llm_model="llama3.1" # llama3.2, llama3.1, llama3.2-vision, gemini-1.5-flash, claude-3-5-sonnet-20241022
 export gen_step="plain"
 export num_repeat=1
 

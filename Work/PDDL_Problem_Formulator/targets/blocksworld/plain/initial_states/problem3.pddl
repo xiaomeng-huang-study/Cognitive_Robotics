@@ -1,11 +1,6 @@
-(:init
-    (ontable purple_block)
-    (ontable orange_block)
-    (ontable red_block)
-    (clear yellow_block)
-    (clear green_block)
-    (clear red_block)
-    (on yellow_block purple_block)
-    (on green_block orange_block)
-    (handempty robot)
-)
+(:init 
+    (ontable yellow_block)
+    (ontable green_block)
+    (clear purple_block)
+    (on purple_block orange_block)
+    (handempty robot))

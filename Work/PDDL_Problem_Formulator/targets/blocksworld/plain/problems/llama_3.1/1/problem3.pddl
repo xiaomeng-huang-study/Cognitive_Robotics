@@ -9,10 +9,11 @@
 	robot - robot
 ) 
 (:init
-    (ontable yellow_block)
-    (clear green_block)
-    (on purple_block orange_block)
-    (on orange_block red_block)
+    (ontable purple_block)
+    (ontable orange_block)
+    (ontable red_block)
+    (ontable green_block)
+    (clear yellow_block)
     (handempty robot)
 ) 
 (:goal (and 

@@ -8,14 +8,8 @@
 	green_block - block
 	robot - robot
 ) 
-(:init
-    (ontable yellow_block)
-    (clear green_block)
-    (on purple_block orange_block)
-    (on orange_block red_block)
-    (handempty robot)
-) 
-(:goal (and 
+(:init (ontable yellow_block) (ontable green_block) (clear purple_block) (clear orange_block) (on purple_block red_block) (handempty robot)) 
+(:goal (and
     (on green_block yellow_block)
     (on purple_block orange_block)
     (on orange_block red_block)

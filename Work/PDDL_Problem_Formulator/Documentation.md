@@ -1,3 +1,8 @@
+# Prepare
+```bash
+pip install numpy torch torchvision
+```
+
 # Generate Problem
 ```bash
 export domain=blocksworld

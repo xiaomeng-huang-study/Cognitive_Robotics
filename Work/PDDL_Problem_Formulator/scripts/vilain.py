@@ -157,7 +157,7 @@ class ViLaIn:
 
         if gen_type in ("initial_state", "goal_specification"):
             if self.args.llm_model in ["llama3.2", "llama3.1", "llama3.2-vision"]:
-                API_URL = "http://91.244.166.123:11434/api/generate" # os.environ["API_URL_Ollama"]
+                API_URL = os.environ["API_URL_Ollama"] # "http://localhost:11434/api/generate"
                 
                 headers = {'Content-Type': 'application/json'}
                 
@@ -179,7 +179,7 @@ class ViLaIn:
                 
                 generated_pddl = response['response']
             
-            elif self.args.llm_model in ["claude-3-5-sonnet-20241022"]:
+            elif self.args.llm_model in ["claude-3-5-sonnet-20240620"]:
                 API_URL = os.environ["API_URL_Claude"]
                 
                 API_KEY = os.environ["API_KEY_Claude"]
@@ -188,7 +188,7 @@ class ViLaIn:
                     "model": self.args.llm_model,
                     "messages": [
                         {"role": "user", "content": prompt}
-                    ]
+                    ],
                 }
                 
                 headers = {

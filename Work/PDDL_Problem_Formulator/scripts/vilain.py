@@ -4,6 +4,7 @@ from typing import List
 from collections import defaultdict
 import os
 import time
+import json
 
 from google import genai
 from google.genai import types
@@ -166,31 +167,27 @@ class ViLaIn:
 
         if gen_type in ("initial_state", "goal_specification"):
             if self.args.llm_model in ["llama3.2", "llama3.1", "llama3.2-vision"]:
-                model = self.args.llm_model
-            
-                response = ollama.chat(
-                    model= model, 
-                    messages= [
-                        # {"role": "system", "content": "You are a helpful assistant."},
-                        {"role": "user", "content": prompt},
-                    ],
-                    options= {"num_ctx": 8192}
-                )
+                API_URL = os.environ["API_URL_Ollama"]
                 
-                generated_pddl = response['message']['content']
-            
-            elif self.args.llm_model in ["gemini-1.5-flash"]:
-                model = genai.Client(api_key= os.environ["API_KEY_Gemini"])
+                headers = {'Content-Type': 'application/json'}
                 
-                response = model.models.generate_content(
-                    model= self.args.llm_model,
-                    contents= prompt,
-                    config=types.GenerateContentConfig(
-                        max_output_tokens = 8192
-                    ),
-                )
+                payload = {
+                    "model": self.args.llm_model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {
+                        "num_ctx": 8192,
+                    }
+                }
                 
-                generated_pddl = response.text
+                try:
+                    response = requests.post(API_URL, json=json.dumps(payload), headers=headers).json()
+                except requests.exceptions.RequestException as e:
+                    print(f"Error during request: {e}")
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
+                
+                generated_pddl = response['response']
             
             elif self.args.llm_model in ["claude-3-5-sonnet-20241022"]:
                 API_URL = os.environ["API_URL_Claude"]
@@ -209,8 +206,13 @@ class ViLaIn:
                     "Authorization": f"Bearer {API_KEY}"
                 }
                 
-                response = requests.post(API_URL, json=payload, headers=headers).json()
-
+                try:
+                    response = requests.post(API_URL, json=payload, headers=headers).json()
+                except requests.exceptions.RequestException as e:
+                    print(f"Error during request: {e}")
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
+                
                 generated_pddl = response["choices"][0]["message"]["content"]
         
         return generated_pddl

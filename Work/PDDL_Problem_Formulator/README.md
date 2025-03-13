@@ -13,6 +13,7 @@ Packages: `numpy`, `torch`, `torchvision`
   - If llama3.2 or llama3.2-vision is selected, then the ``API_URL_Ollama`` needs to be declared in the system environment, see [Rest API for Ollama](https://github.com/ollama/ollama?tab=readme-ov-file#rest-api) for technical details. 
   - If claude-3-5-sonnet-20240620 is selected, then the ``API_URL_Claude`` and ``API_KEY_Claude`` need to be declared in the system environment, see [Rest API for Claude](https://docs.anthropic.com/en/api/getting-started) for technical details. 
 - ``num_repeat`` in ``generate_problem.sh`` is optional and represents the number of repetitions. 
+- (``plain`` means that there's no reprompting.) 
 
 ## Usage
 Run the script ``generate_problem.sh``. 

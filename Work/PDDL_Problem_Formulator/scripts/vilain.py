@@ -156,7 +156,7 @@ class ViLaIn:
             prompt += f"(You only need to show a result, thinking processes or textual descriptions such as annotations need to be omitted. You can only answer in statements that conform to PDDL specifications.) "
 
         if gen_type in ("initial_state", "goal_specification"):
-            if self.args.llm_model in ["llama3.2", "llama3.1", "llama3.2-vision"]:
+            if self.args.llm_model in ["llama3.2", "llama3.2-vision"]:
                 API_URL = os.environ["API_URL_Ollama"] # "http://localhost:11434/api/generate"
                 
                 headers = {'Content-Type': 'application/json'}
